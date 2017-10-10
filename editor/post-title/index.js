@@ -3,7 +3,6 @@
  */
 import { connect } from 'react-redux';
 import Textarea from 'react-autosize-textarea';
-import clickOutside from 'react-click-outside';
 import classnames from 'classnames';
 
 /**
@@ -80,10 +79,6 @@ class PostTitle extends Component {
 		this.setState( { isSelected: false } );
 	}
 
-	handleClickOutside() {
-		this.setState( { isSelected: false } );
-	}
-
 	onKeyDown( event ) {
 		if ( event.keyCode === ENTER ) {
 			event.preventDefault();
@@ -107,6 +102,7 @@ class PostTitle extends Component {
 						onChange={ this.onChange }
 						placeholder={ __( 'Add title' ) }
 						onFocus={ this.onSelect }
+						onBlur={ this.onUnselect }
 						onClick={ this.onSelect }
 						onKeyDown={ this.onKeyDown }
 						onKeyPress={ this.onUnselect }
@@ -130,4 +126,4 @@ export default connect(
 		},
 		clearSelectedBlock,
 	}
-)( clickOutside( PostTitle ) );
+)( PostTitle );
