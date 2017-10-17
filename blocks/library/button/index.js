@@ -2,20 +2,18 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { IconButton, PanelBody } from '@wordpress/components';
 
 /**
  * Internal dependencies
  */
 import './editor.scss';
 import './style.scss';
+import ButtonControls from './button-controls';
+import ButtonRender from './button-render';
 import { registerBlockType, source } from '../../api';
-import Editable from '../../editable';
-import UrlInput from '../../url-input';
 import BlockControls from '../../block-controls';
 import ToggleControl from '../../inspector-controls/toggle-control';
 import BlockAlignmentToolbar from '../../block-alignment-toolbar';
-import ColorPalette from '../../color-palette';
 import InspectorControls from '../../inspector-controls';
 import BlockDescription from '../../block-description';
 
@@ -75,73 +73,47 @@ registerBlockType( 'core/button', {
 
 		return [
 			focus && (
+				<InspectorControls key="inspector">
+					<BlockDescription>
+						<p>{ __( 'A nice little button. Call something out with it.' ) }</p>
+					</BlockDescription>
+					<ToggleControl
+						label={ __( 'Stand on a line' ) }
+						checked={ !! clear }
+						onChange={ toggleClear }
+					/>
+				</InspectorControls>
+			),
+			focus && (
 				<BlockControls key="controls">
 					<BlockAlignmentToolbar value={ align } onChange={ updateAlignment } />
 				</BlockControls>
 			),
-			<span key="button" className={ className } title={ title } style={ { backgroundColor: color } } >
-				<Editable
-					tagName="span"
-					placeholder={ __( 'Add text…' ) }
-					value={ text }
-					focus={ focus }
-					onFocus={ setFocus }
-					onChange={ ( value ) => setAttributes( { text: value } ) }
-					formattingControls={ [ 'bold', 'italic', 'strikethrough' ] }
-					style={ {
-						color: textColor,
-					} }
-					keepPlaceholderOnFocus
-				/>
-				{ focus &&
-					<form
-						className="blocks-format-toolbar__link-modal"
-						onSubmit={ ( event ) => event.preventDefault() }>
-						<UrlInput
-							value={ url }
-							onChange={ ( value ) => setAttributes( { url: value } ) }
-						/>
-						<IconButton icon="editor-break" label={ __( 'Apply' ) } type="submit" />
-					</form>
-				}
-				{ focus &&
-					<InspectorControls key="inspector">
-						<BlockDescription>
-							<p>{ __( 'A nice little button. Call something out with it.' ) }</p>
-						</BlockDescription>
-
-						<ToggleControl
-							label={ __( 'Stand on a line' ) }
-							checked={ !! clear }
-							onChange={ toggleClear }
-						/>
-						<PanelBody title={ __( 'Button Background Color' ) }>
-							<ColorPalette
-								value={ color }
-								onChange={ ( colorValue ) => setAttributes( { color: colorValue } ) }
-							/>
-						</PanelBody>
-						<PanelBody title={ __( 'Button Text Color' ) }>
-							<ColorPalette
-								value={ textColor }
-								onChange={ ( colorValue ) => setAttributes( { textColor: colorValue } ) }
-							/>
-						</PanelBody>
-					</InspectorControls>
-				}
-			</span>,
+			<ButtonControls key="buttonControls"
+				{ ...{ className, focus, setAttributes, url, setFocus, title } }
+				buttonBackgroundColor={ color }
+				buttonText={ text }
+				buttonTextColor={ textColor }
+				buttonUrl={ url }
+				setButtonBackgroundColor={ ( value ) => setAttributes( { color: value } ) }
+				setButtonText={ ( value ) => setAttributes( { text: value } ) }
+				setButtonTextColor={ ( value ) => setAttributes( { textColor: value } ) }
+				setButtonUrl={ ( value ) => setAttributes( { url: value } ) }
+				showInspector={ focus }
+			/>,
 		];
 	},
 
 	save( { attributes } ) {
 		const { url, text, title, align, color, textColor } = attributes;
-
 		return (
-			<div className={ `align${ align }` } style={ { backgroundColor: color } }>
-				<a href={ url } title={ title } style={ { color: textColor } }>
-					{ text }
-				</a>
-			</div>
+			<ButtonRender
+				{ ...{ align, title } }
+				buttonBackgroundColor={ color }
+				buttonText={ text }
+				buttonTextColor={ textColor }
+				buttonUrl={ url }
+			/>
 		);
 	},
 } );

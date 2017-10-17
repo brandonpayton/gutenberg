@@ -10,6 +10,10 @@ import classnames from 'classnames';
  */
 import './editor.scss';
 import './style.scss';
+import '../button/editor.scss';
+import '../button/style.scss';
+import ButtonControls from '../button/button-controls';
+import ButtonRender from '../button/button-render';
 import { registerBlockType, source } from '../../api';
 import Editable from '../../editable';
 import MediaUploadButton from '../../media-upload-button';
@@ -53,6 +57,22 @@ registerBlockType( 'core/cover-image', {
 			type: 'number',
 			default: 50,
 		},
+		buttonBackgroundColor: {
+			type: 'string',
+		},
+		buttonText: {
+			type: 'string',
+		},
+		buttonTextColor: {
+			type: 'string',
+		},
+		buttonUrl: {
+			type: 'string',
+		},
+		showButton: {
+			type: 'boolean',
+			default: false,
+		},
 	},
 
 	getEditWrapperProps( attributes ) {
@@ -63,10 +83,11 @@ registerBlockType( 'core/cover-image', {
 	},
 
 	edit( { attributes, setAttributes, focus, setFocus, className } ) {
-		const { url, title, align, id, hasParallax, dimRatio } = attributes;
+		const { url, title, align, id, hasParallax, dimRatio, buttonBackgroundColor, buttonText, buttonTextColor, buttonUrl, showButton } = attributes;
 		const updateAlignment = ( nextAlign ) => setAttributes( { align: nextAlign } );
 		const onSelectImage = ( media ) => setAttributes( { url: media.url, id: media.id } );
 		const toggleParallax = () => setAttributes( { hasParallax: ! hasParallax } );
+		const toggleShowButton = () => setAttributes( { showButton: ! showButton } );
 		const setDimRatio = ( ratio ) => setAttributes( { dimRatio: ratio } );
 		const style = url
 			? { backgroundImage: `url(${ url })` }
@@ -79,6 +100,7 @@ registerBlockType( 'core/cover-image', {
 				'has-parallax': hasParallax,
 			}
 		);
+		const focusedEditable = focus ? focus.editable || 'title' : null;
 
 		const controls = focus && [
 			<BlockControls key="controls">
@@ -119,6 +141,11 @@ registerBlockType( 'core/cover-image', {
 					max={ 100 }
 					step={ 10 }
 				/>
+				<ToggleControl
+					label={ __( 'Show Button' ) }
+					checked={ !! showButton }
+					onChange={ toggleShowButton }
+				/>
 			</InspectorControls>,
 		];
 
@@ -152,22 +179,38 @@ registerBlockType( 'core/cover-image', {
 				className={ classes }
 			>
 				{ title || !! focus ? (
-					<Editable
-						tagName="h2"
-						placeholder={ __( 'Write title…' ) }
-						value={ title }
-						focus={ focus }
-						onFocus={ setFocus }
-						onChange={ ( value ) => setAttributes( { title: value } ) }
-						inlineToolbar
+					<div className="title-container">
+						<Editable
+							tagName="h2"
+							placeholder={ __( 'Write title…' ) }
+							value={ title }
+							focus={ focusedEditable === 'title' ? focus : null }
+							onFocus={ ( props ) => setFocus( { ...props, editable: 'title' } ) }
+							onChange={ ( value ) => setAttributes( { title: value } ) }
+							inlineToolbar
 					/>
+					</div>
 				) : null }
+				<br />
+
+				{ showButton && <ButtonControls key="buttonControls"
+					{ ...{ buttonBackgroundColor, buttonText, buttonTextColor, buttonUrl } }
+					className="wp-block-button aligncenter"
+					focus={ focusedEditable === 'button' ? focus : null }
+					setButtonBackgroundColor={ ( value ) => setAttributes( { buttonBackgroundColor: value } ) }
+					setButtonText={ ( value ) => setAttributes( { buttonText: value } ) }
+					setButtonTextColor={ ( value ) => setAttributes( { buttonTextColor: value } ) }
+					setButtonUrl={ ( value ) => setAttributes( { buttonUrl: value } ) }
+					setFocus={ ( props ) => setFocus( { ...props, editable: 'button' } ) }
+					showInspector={ focus }
+					/>
+				}
 			</section>,
 		];
 	},
 
 	save( { attributes, className } ) {
-		const { url, title, hasParallax, dimRatio } = attributes;
+		const { url, title, hasParallax, dimRatio, buttonBackgroundColor, buttonText, buttonTextColor, buttonUrl, showButton } = attributes;
 		const style = url
 			? { backgroundImage: `url(${ url })` }
 			: undefined;
@@ -183,6 +226,10 @@ registerBlockType( 'core/cover-image', {
 		return (
 			<section className={ classes } style={ style }>
 				<h2>{ title }</h2>
+				{ showButton && <ButtonRender
+					align="center"
+					{ ...{ buttonBackgroundColor, buttonText, buttonTextColor, buttonUrl } }
+				/> }
 			</section>
 		);
 	},
