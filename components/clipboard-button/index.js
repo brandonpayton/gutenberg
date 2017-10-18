@@ -14,36 +14,24 @@ import { Component } from '@wordpress/element';
  */
 import { Button } from '../';
 
-function ClipboardButton( { className, children, onCopy, text } ) {
-	const classes = classnames( 'components-clipboard-button', className );
-
-	return [
-		<Button key="button" className={ classes }>
-			{ children }
-		</Button>,
-		<ClipboardButton.Container
-			key="container"
-			onCopy={ onCopy }
-			text={ text }
-		/>,
-	];
-}
-
-ClipboardButton.Container = class extends Component {
+class ClipboardButton extends Component {
 	constructor() {
 		super( ...arguments );
 
+		this.bindContainer = this.bindContainer.bind( this );
+		this.stopPropagation = this.stopPropagation.bind( this );
 		this.onCopy = this.onCopy.bind( this );
 		this.getText = this.getText.bind( this );
 	}
 
 	componentDidMount() {
 		const { container, getText, onCopy } = this;
+		const button = container.firstChild;
 
-		this.clipboard = new Clipboard(
-			container.previousElementSibling,
-			{ text: getText, container }
-		);
+		this.clipboard = new Clipboard( button,	{
+			text: getText,
+			container,
+		} );
 
 		this.clipboard.on( 'success', onCopy );
 	}
@@ -53,8 +41,14 @@ ClipboardButton.Container = class extends Component {
 		delete this.clipboard;
 	}
 
-	shouldComponentUpdate() {
-		return false;
+	bindContainer( container ) {
+		this.container = container;
+	}
+
+	stopPropagation( event ) {
+		// Since Clipboard will create a fake textarea for copying then destroy
+		// it afterward, prevent the removal's blur event from being handled.
+		event.stopPropagation();
 	}
 
 	onCopy() {
@@ -69,8 +63,17 @@ ClipboardButton.Container = class extends Component {
 	}
 
 	render() {
-		return <span ref={ ref => this.container = ref } />;
+		const { className, children } = this.props;
+		const classes = classnames( 'components-clipboard-button', className );
+
+		return (
+			<div onBlur={ this.stopPropagation } ref={ this.bindContainer }>
+				<Button className={ classes }>
+					{ children }
+				</Button>
+			</div>
+		);
 	}
-};
+}
 
 export default ClipboardButton;
